@@ -2,9 +2,10 @@ from random import randint, choice
 import time, sys, os
 
 class TicTacToe:
-	board = [None for i in range(9)]
+	board = [None for i in range(9)] # list representing game's board 
+	turn = 1 # counter of computer's turns 
 
-	def print_board(self, board = None):
+	def print_board(self, board = None): # printing game board 
 		board = self.board if board == None else board
 
 		os.system("clear") # use "cls" for windows
@@ -34,38 +35,51 @@ class TicTacToe:
 
 
 	def computer_turn(self):
-		my_cells = [i + 1 for i in range(9) if self.board[i] == "O"]
-		position = -1
-		if len(my_cells) == 0:
+		position = None
+
+		def get_line(cell):
+			if cell <= 3: return 1
+			if cell <= 6: return 2
+			return 3
+
+		if self.turn == 1:
+			self.turn = 2
 			oponent_choice = self.board.index("X")
-			if oponent_choice + 1 == 5:
-				position = choice([1, 3, 7, 9]) - 1
-			elif oponent_choice + 1 in [1, 3, 7, 9]:
+			if oponent_choice + 1 in [1, 3, 7, 9]:
 				position = 5 - 1
 			else:
 				position = choice([1, 3, 7, 9]) - 1
 		
-		if len(my_cells) == 1:
+		elif self.turn == 2:
+			self.turn = 3
 			for i in [1, 3, 7, 9]:
 				if self.board[i - 1] == "X":
 					if self.board[5 - 1] == "X":
 						position = 10 - i - 1
+						if self.board[position] == "O":
+							position = choice([item - 1 for item in [1, 3, 7, 9] if item not in [position + 1, i]])
 						break
+
 					for j in [1, 3, 7, 9]:
 						if i != j and self.board[j - 1] == "X":
 							position = i + (j - i) // 2 - 1
 							if self.board[position] == "O":
-								position = 3 - 1 if i == 1 else 7 - 1
+								position = choice([2, 4, 6, 8]) - 1
 							break
+
 					for j in [2, 4, 6, 8]:
 						if self.board[j - 1] == "X":
 							diff = abs(j - i)
-							position = max(i, j) + diff
-							if position > 9: position = min(i, j) - diff
-							if self.board[position - 1] == "O": position = 5
-							position -= 1
+							if get_line(i) != get_line(j) and diff == 1:
+								position = 5 - 1
+							else:
+								position = max(i, j) + diff
+								if position > 9: position = min(i, j) - diff
+								if self.board[position - 1] == "O": position = 5
+								position -= 1
 
-			if position == -1:
+
+			if position == None:
 				for i in [2, 4, 6, 8]:
 					if self.board[i - 1] == "X":
 						if self.board[5 - 1] == "X":
@@ -73,7 +87,7 @@ class TicTacToe:
 						else:
 							position = 5 - 1
 
-		if len(my_cells) > 1:
+		if self.turn > 2:
 			tmp_board = self.board[:]
 			candidates = [i for i in range(9) if self.board[i] == None]
 			for candidate in candidates:
@@ -83,7 +97,7 @@ class TicTacToe:
 					break
 				tmp_board[candidate] = None
 
-			if position == -1:
+			if position == None:
 				for candidate in candidates:
 					tmp_board[candidate] = "X"
 					if self.get_game_winner(tmp_board) == "X":
@@ -91,7 +105,7 @@ class TicTacToe:
 						break
 					tmp_board[candidate] = None
 
-			if position == -1: position = candidates[0]
+			if position == None: position = candidates[0]
 
 
 		self.board[position] = "O"
